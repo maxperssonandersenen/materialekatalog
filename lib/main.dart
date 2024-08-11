@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:materialekatalog/building_structure_card.dart';
+import 'package:materialekatalog/comparison_screen.dart';
 import 'package:materialekatalog/construction.dart';
 import 'package:materialekatalog/dropdown_chip.dart';
 import 'package:materialekatalog/filter_tag.dart';
@@ -96,115 +98,19 @@ class _FilterGridScreenState extends State<FilterGridScreen> {
     return Scaffold(
       key: scaffoldKey,
       drawer: StatefulBuilder(builder: (context, state) {
-        final double highestPrice = _savedStructures.isNotEmpty ? _savedStructures.map((structure) => structure.price).reduce((a, b) => a > b ? a : b) : 0.0;
-        final double highestCO2 = _savedStructures.isNotEmpty ? _savedStructures.map((structure) => structure.co2).reduce((a, b) => a > b ? a : b) : 0.0;
-        return Container(
-          width: double.infinity,
-          height: double.infinity,
-          color: Theme.of(context).colorScheme.background,
-          child: Column(
-            children: [
-              Stack(
-                children: [
-                  Align(
-                      alignment: Alignment.topLeft,
-                      child: IconButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          icon: Icon(Icons.close))),
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        'Sammenligning',
-                        style: Theme.of(context).textTheme.headline6,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: DataTable(
-                  columns: [
-                    DataColumn(label: SizedBox.shrink()), // New column for images
-
-                    DataColumn(label: Text('Name')),
-                    DataColumn(label: Text('Description')),
-                    DataColumn(numeric: true, label: Text('CO2')),
-                    DataColumn(numeric: true, label: Text('Price')),
-                    DataColumn(label: SizedBox.shrink()),
-                  ],
-                  rows: _savedStructures.map((structure) {
-                    return DataRow(
-                      cells: [
-                        DataCell(
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.rectangle,
-                              borderRadius: BorderRadius.circular(8),
-                              image: DecorationImage(
-                                image: AssetImage('assets/Untitled.jpg'), // Replace 'structure.image' with the actual image path or URL
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                        ),
-                        DataCell(Text(structure.name)),
-                        DataCell(Text(structure.description)),
-                        DataCell(Column(
-                          children: [
-                            Text('${structure.co2} kg'),
-                            LinearProgressIndicator(
-                              value: structure.co2 / highestCO2,
-                            ),
-                          ],
-                        )),
-                        DataCell(Column(
-                          children: [
-                            Text('${structure.price} kr'),
-                            LinearProgressIndicator(
-                              value: structure.price / highestPrice,
-                            ),
-                          ],
-                        )),
-                        DataCell(
-                          IconButton(
-                            icon: Icon(Icons.delete),
-                            onPressed: () {
-                              setState(() {
-                                _savedStructures.remove(structure);
-                              });
-                              state(() {
-                                _savedStructures.remove(structure);
-                              });
-                            },
-                          ),
-                        ),
-                      ],
-                    );
-                  }).toList(),
-                ),
-              ),
-            ],
-          ),
-        );
+        return ComparisonScreen(savedStructures: _savedStructures);
       }),
-      appBar: AppBar(
-        leading: IconButton(
-          icon: Row(
-            children: [
-              Icon(Icons.compare),
-              Text('  ${_savedStructures.length}'),
-            ],
-          ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: FloatingActionButton(
           onPressed: () {
             scaffoldKey.currentState?.openDrawer();
           },
-        ),
+          child: Text(
+            '${_savedStructures.length}',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          )),
+      appBar: AppBar(
+        leading: SizedBox.shrink(),
         title: const Text('Materialekatalog'),
       ),
       body: Column(
@@ -239,8 +145,8 @@ class _FilterGridScreenState extends State<FilterGridScreen> {
                           );
                         }).toList()),
                   ),
-                  label: 'Tilføj filter',
-                  iconData: Icons.add,
+                  label: 'Søg',
+                  iconData: Icons.search,
                   chipColor: Theme.of(context).colorScheme.primary.withAlpha(140),
                 ),
                 ..._selectedFilters.map((category) {
@@ -262,19 +168,19 @@ class _FilterGridScreenState extends State<FilterGridScreen> {
                     ),
                   );
                 }).toList(),
-                Padding(
-                  padding: const EdgeInsets.only(left: 8.0),
-                  child: ActionChip(
-                      color: MaterialStateProperty.all(
-                        Theme.of(context).colorScheme.primary.withAlpha(140),
-                      ),
-                      label: Text('Ryd'),
-                      onPressed: () => setState(() {
-                            _selectedFilters.clear();
-                            _overlayPortalControllers.clear();
-                            _values.clear();
-                          })),
-                ),
+                // Padding(
+                //   padding: const EdgeInsets.only(left: 8.0),
+                //   child: ActionChip(
+                //       color: MaterialStateProperty.all(
+                //         Theme.of(context).colorScheme.primary.withAlpha(140),
+                //       ),
+                //       label: Text('Ryd'),
+                //       onPressed: () => setState(() {
+                //             _selectedFilters.clear();
+                //             _overlayPortalControllers.clear();
+                //             _values.clear();
+                //           })),
+                // ),
               ],
             ),
           ),
@@ -289,63 +195,18 @@ class _FilterGridScreenState extends State<FilterGridScreen> {
               itemBuilder: (context, index) {
                 final item = mockedBuildingStructures[index];
                 final isItemSelected = _savedStructures.contains(item);
-                return Card(
-                  elevation: 2,
-                  shape: ShapeBorder.lerp(
-                    RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                    RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                    0.5,
-                  ),
-                  surfaceTintColor: Colors.white,
-                  color: Colors.white,
-                  child: GridTile(
-                    header: GridTileBar(
-                        trailing: IconButton(
-                            icon: Icon(
-                              isItemSelected ? Icons.check : Icons.add,
-                              color: isItemSelected ? Colors.green : Colors.black,
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                isItemSelected ? _savedStructures.remove(item) : _savedStructures.add(item);
-                              });
-                            }),
-                        subtitle: Text(
-                          item.description,
-                          style: Theme.of(context).textTheme.titleSmall,
-                        ),
-                        title: Text(item.name, style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20))),
-                    child: Image.asset('assets/Untitled.jpg'),
-                    footer: Column(
-                      children: [
-                        Divider(
-                          indent: 20,
-                          endIndent: 20,
-                          color: Colors.black26,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              Column(
-                                children: [
-                                  Icon(Icons.co2),
-                                  Text('${item.co2} kg'),
-                                ],
-                              ),
-                              Column(
-                                children: [
-                                  Icon(Icons.money),
-                                  Text('${item.price} kr'),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                return BuildingStructureCard(
+                  item: item,
+                  isItemSelected: isItemSelected,
+                  onItemPressed: (isSelected) {
+                    setState(() {
+                      if (isSelected) {
+                        _savedStructures.add(item);
+                      } else {
+                        _savedStructures.remove(item);
+                      }
+                    });
+                  },
                 );
               },
             ),
