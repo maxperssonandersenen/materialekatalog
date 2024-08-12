@@ -44,7 +44,7 @@ class _FilterGridScreenState extends State<FilterGridScreen> {
   final List<String> _items = List.generate(100, (index) => 'Item $index');
   String _filter = '';
   final Map<String, OverlayPortalController> _overlayPortalControllers = {};
-  final Set<FilterTag> _selectedFilters = {};
+  final List<FilterTag> _selectedFilters = [];
   final Map<String, String> _values = {};
   late final Set<FilterTag> _filters;
   final Set<BuildingStructure> _savedStructures = {};
@@ -53,35 +53,61 @@ class _FilterGridScreenState extends State<FilterGridScreen> {
   @override
   void initState() {
     _filters = {
-      FilterTag(name: 'Konstruktion', isSelected: false, icon: Icons.house, menu: NestedCheckbox()),
-      FilterTag(name: 'Materialer', isSelected: false, icon: Icons.forest, menu: NestedCheckbox()),
-      FilterTag(name: 'Egenskaber', isSelected: false, icon: Icons.construction, menu: NestedCheckbox()),
+      FilterTag(
+          name: 'Konstruktion',
+          isSelected: false,
+          icon: Icons.house,
+          menu: () => NestedCheckbox(onSelectedItems: (p0) {
+                setState(() {
+                  _values['Konstruktion'] = p0.map((e) => e['title']).join('/');
+                });
+              })),
+      FilterTag(
+          name: 'Materialer',
+          isSelected: false,
+          icon: Icons.forest,
+          menu: () => NestedCheckbox(onSelectedItems: (p0) {
+                setState(() {
+                  _values['Materialer'] = p0.map((e) => e['title']).join('/');
+                });
+              })),
+      FilterTag(
+          name: 'Egenskaber',
+          isSelected: false,
+          icon: Icons.construction,
+          menu: () => NestedCheckbox(onSelectedItems: (p0) {
+                setState(() {
+                  _values['Egenskaber'] = p0.map((e) => e['title']).join('/');
+                });
+              })),
       FilterTag(
           name: 'CO2',
           isSelected: false,
           icon: Icons.co2,
-          menu: SliderWidget(
-            title: 'CO2',
-            unit: 'kg',
-            onChanged: (p0) => {
-              setState(() {
-                _values['CO2'] = p0;
-              })
-            },
-          )),
+          unique: true,
+          menu: () => SliderWidget(
+                title: 'CO2',
+                unit: 'kg',
+                onChanged: (p0) => {
+                  setState(() {
+                    _values['CO2'] = p0;
+                  })
+                },
+              )),
       FilterTag(
           name: 'Pris',
           isSelected: false,
+          unique: true,
           icon: Icons.money,
-          menu: SliderWidget(
-            title: 'Pris',
-            unit: 'kr',
-            onChanged: (p0) => {
-              setState(() {
-                _values['Pris'] = p0;
-              })
-            },
-          )),
+          menu: () => SliderWidget(
+                title: 'Pris',
+                unit: 'kr',
+                onChanged: (p0) => {
+                  setState(() {
+                    _values['Pris'] = p0;
+                  })
+                },
+              )),
     };
     super.initState();
   }
@@ -128,7 +154,7 @@ class _FilterGridScreenState extends State<FilterGridScreen> {
                     width: 200,
                     child: ListView(
                         shrinkWrap: true,
-                        children: _filters.difference(_selectedFilters).map((category) {
+                        children: _filters.map((category) {
                           return ListTile(
                             leading: Icon(category.icon),
                             title: Text(category.name),
@@ -153,7 +179,7 @@ class _FilterGridScreenState extends State<FilterGridScreen> {
                   return Padding(
                     padding: const EdgeInsets.only(left: 8.0),
                     child: CustomDropDown(
-                      menu: SizedBox(width: 300, child: category.menu),
+                      menu: SizedBox(width: 300, child: category.menu()),
                       overlayPortalController: _overlayPortalControllers[category.name],
                       iconData: category.icon,
                       onDeleted: () {

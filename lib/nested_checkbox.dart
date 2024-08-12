@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 class NestedCheckbox extends StatefulWidget {
+  final Function(List<Map<String, dynamic>>) onSelectedItems;
+
+  const NestedCheckbox({super.key, required this.onSelectedItems});
   @override
   _NestedCheckboxState createState() => _NestedCheckboxState();
 }
@@ -126,6 +129,13 @@ class _NestedCheckboxState extends State<NestedCheckbox> {
             setState(() {
               item['isChecked'] = value!;
             });
+            if (item['isChecked']) {
+              List<Map<String, dynamic>> nestedItems = [];
+              for (var element in _nestedItems) {
+                findCheckedItems(element, nestedItems);
+              }
+              widget.onSelectedItems(nestedItems);
+            }
           },
         ),
         if (item['subItems'] != null)
@@ -144,5 +154,16 @@ class _NestedCheckboxState extends State<NestedCheckbox> {
           ),
       ],
     );
+  }
+
+  void findCheckedItems(Map<String, dynamic> item, List<Map<String, dynamic>> nestedItems) {
+    if (item['isChecked']) {
+      nestedItems.add(item);
+    }
+    if (item['subItems'] != null) {
+      for (var subItem in item['subItems']) {
+        findCheckedItems(subItem, nestedItems);
+      }
+    }
   }
 }
